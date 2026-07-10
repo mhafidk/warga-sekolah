@@ -79,3 +79,12 @@ func (s *Service) Register(ctx context.Context, email, fullName, password string
 
 	return u, nil
 }
+
+func (s *Service) GetUserByID(ctx context.Context, userID int64) (*User, error) {
+	u, err := s.repo.FindByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return u, nil
+}

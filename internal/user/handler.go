@@ -3,6 +3,8 @@ package user
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/mhafidk/warga-sekolah/internal/auth"
 )
 
 type CreateRequest struct {
@@ -51,8 +53,20 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
+	userID, ok := auth.GetUserFromContext(r.Context())
+	if !ok {
+		http.Error(w, "Unathorized", http.StatusUnauthorized)
+	}
+
+	u, err := h.svc.GetUserByID(r.Context(), userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(u)
 }
 
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {

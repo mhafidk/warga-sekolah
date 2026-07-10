@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/mhafidk/warga-sekolah/internal/auth"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -15,11 +16,34 @@ type User struct {
 }
 
 type Service struct {
-	repo *Repository
+	repo      *Repository
+	jwtSecret []byte
 }
 
-func NewService(repo *Repository) *Service {
-	return &Service{repo: repo}
+func NewService(repo *Repository, jwtSecret []byte) *Service {
+	return &Service{
+		repo:      repo,
+		jwtSecret: jwtSecret,
+	}
+}
+
+func (s *Service) Authenticate(ctx context.Context, email, password string) (*User, string, error) {
+	u, err := s.repo.FindByEmail(ctx, email)
+	if err != nil {
+		return nil, "", errors.New("Email not found")
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
+	if err != nil {
+		return nil, "", errors.New("Authentication failed")
+	}
+
+	token, err := auth.GenerateToken(u.ID, s.jwtSecret)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return u, token, nil
 }
 
 func (s *Service) Register(ctx context.Context, email, fullName, password string) (*User, error) {
@@ -48,6 +72,7 @@ func (s *Service) Register(ctx context.Context, email, fullName, password string
 	}
 
 	u = &User{
+		ID:       u.ID,
 		Email:    email,
 		FullName: fullName,
 	}

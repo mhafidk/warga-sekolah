@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"database/sql"
+	"errors"
 )
 
 type Repository struct {
@@ -11,6 +12,22 @@ type Repository struct {
 
 func NewRepository(db *sql.DB) *Repository {
 	return &Repository{db: db}
+}
+
+func (r *Repository) FindByEmail(ctx context.Context, email string) (*User, error) {
+	query := `SELECT id, full_name, email, password FROM users WHERE email = ? LIMIT 1`
+
+	var u User
+	err := r.db.QueryRowContext(ctx, query, email).Scan(&u.ID, &u.FullName, &u.Email, &u.Password)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errors.New("User not found")
+		}
+		return nil, err
+	}
+
+	return &u, nil
 }
 
 func (r *Repository) ExistsByEmail(ctx context.Context, email string) (bool, error) {

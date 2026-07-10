@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	db_assets "github.com/mhafidk/warga-sekolah/db"
+	"github.com/mhafidk/warga-sekolah/internal/router"
 	"github.com/mhafidk/warga-sekolah/internal/user"
 	"github.com/pressly/goose/v3"
 	_ "turso.tech/database/tursogo"
@@ -33,16 +34,20 @@ func main() {
 	}
 	log.Println("Database migrations applied successfully!")
 
-	http.HandleFunc("/ping", ping)
+	jwtSecret := []byte("test")
 
 	userRepo := user.NewRepository(db)
-	userSvc := user.NewService(userRepo)
+	userSvc := user.NewService(userRepo, jwtSecret)
 	userHandler := user.NewHandler(userSvc)
 
-	http.HandleFunc("POST /api/users", userHandler.Create)
+	handlers := router.Handlers{
+		User: userHandler,
+	}
+
+	appRouter := router.New(jwtSecret, handlers)
 
 	log.Println("Start the server at port 3000")
-	http.ListenAndServe(":3000", nil)
+	log.Fatal(http.ListenAndServe(":3000", appRouter))
 }
 
 func ping(w http.ResponseWriter, r *http.Request) {

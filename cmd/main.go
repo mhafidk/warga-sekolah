@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	db_assets "github.com/mhafidk/warga-sekolah/db"
+	"github.com/mhafidk/warga-sekolah/internal/user"
 	"github.com/pressly/goose/v3"
 	_ "turso.tech/database/tursogo"
 )
@@ -33,6 +34,12 @@ func main() {
 	log.Println("Database migrations applied successfully!")
 
 	http.HandleFunc("/ping", ping)
+
+	userRepo := user.NewRepository(db)
+	userSvc := user.NewService(userRepo)
+	userHandler := user.NewHandler(userSvc)
+
+	http.HandleFunc("POST /api/users", userHandler.Create)
 
 	log.Println("Start the server at port 3000")
 	http.ListenAndServe(":3000", nil)

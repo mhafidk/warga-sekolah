@@ -15,7 +15,7 @@ func NewRepository(db *sql.DB) *Repository {
 }
 
 func (r *Repository) FindByUserID(ctx context.Context, userID int64) (*User, error) {
-	query := `SELECT id, full_name, email FROM users WHERE id = ? LIMIT 1`
+	query := `SELECT id, full_name, email, role FROM users WHERE id = ? LIMIT 1`
 
 	var u User
 	err := r.db.QueryRowContext(ctx, query, userID).Scan(&u.ID, &u.FullName, &u.Email)
@@ -31,7 +31,7 @@ func (r *Repository) FindByUserID(ctx context.Context, userID int64) (*User, err
 }
 
 func (r *Repository) FindByEmail(ctx context.Context, email string) (*User, error) {
-	query := `SELECT id, full_name, email, password FROM users WHERE email = ? LIMIT 1`
+	query := `SELECT id, full_name, email, password, role FROM users WHERE email = ? LIMIT 1`
 
 	var u User
 	err := r.db.QueryRowContext(ctx, query, email).Scan(&u.ID, &u.FullName, &u.Email, &u.Password)
@@ -55,9 +55,9 @@ func (r *Repository) ExistsByEmail(ctx context.Context, email string) (bool, err
 }
 
 func (r *Repository) Save(ctx context.Context, u *User) error {
-	query := `INSERT INTO users (email, full_name, password) VALUES (?, ?, ?)`
+	query := `INSERT INTO users (email, full_name, password, role) VALUES (?, ?, ?, ?)`
 
-	result, err := r.db.ExecContext(ctx, query, u.Email, u.FullName, u.Password)
+	result, err := r.db.ExecContext(ctx, query, u.Email, u.FullName, u.Password, u.Role)
 	if err != nil {
 		return err
 	}

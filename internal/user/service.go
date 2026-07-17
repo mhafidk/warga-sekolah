@@ -13,6 +13,7 @@ type User struct {
 	Email    string `json:"email"`
 	FullName string `json:"full_name"`
 	Password string `json:"password"`
+	Role     string `json:"role"`
 }
 
 type Service struct {
@@ -46,7 +47,7 @@ func (s *Service) Authenticate(ctx context.Context, email, password string) (*Us
 	return u, token, nil
 }
 
-func (s *Service) Register(ctx context.Context, email, fullName, password string) (*User, error) {
+func (s *Service) Register(ctx context.Context, email, fullName, password, role string) (*User, error) {
 	exists, err := s.repo.ExistsByEmail(ctx, email)
 	if err != nil {
 		return nil, err
@@ -65,6 +66,7 @@ func (s *Service) Register(ctx context.Context, email, fullName, password string
 		Email:    email,
 		FullName: fullName,
 		Password: string(hashedPassword),
+		Role:     role,
 	}
 
 	if err := s.repo.Save(ctx, u); err != nil {
@@ -75,6 +77,7 @@ func (s *Service) Register(ctx context.Context, email, fullName, password string
 		ID:       u.ID,
 		Email:    email,
 		FullName: fullName,
+		Role:     role,
 	}
 
 	return u, nil

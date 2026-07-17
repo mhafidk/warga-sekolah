@@ -11,6 +11,7 @@ type CreateRequest struct {
 	Email    string `json:"email"`
 	FullName string `json:"full_name"`
 	Password string `json:"password"`
+	Role     string `json:"role"`
 }
 
 type LoginRequest struct {
@@ -77,7 +78,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u, err := h.svc.Register(r.Context(), req.Email, req.FullName, req.Password)
+	u, err := h.svc.Register(r.Context(), req.Email, req.FullName, req.Password, req.Role)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
 		return
